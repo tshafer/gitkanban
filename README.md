@@ -2,7 +2,7 @@ Ask a team member for a .env file and place it in the root of the project.
 
 Run the following
 
-composer config http-basic.spark.laravel.com tj@tjshafer.com dEWPW7iFnCdnpmL9nxZDQDVZti4MRQgSsByUnBOz
+
 composer install
 
 php artisan migrate
