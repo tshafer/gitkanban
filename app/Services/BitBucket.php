@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Contracts\SourceProviderClient;
-use App\Hook\Deployment;
 use App\Models\Hook;
 use App\Models\SourceProvider;
 use Exception;
@@ -50,18 +49,13 @@ class BitBucket implements SourceProviderClient
 
         $path = 'https://api.bitbucket.com/'.$path;
 
-        $response = HTTP::withHeaders(
-            [
-                'Accept' => 'application/vnd.github.v3+json',
-            ]
-        )
+        $response = HTTP::withHeaders([
+            'Accept' => 'application/vnd.github.v3+json',
+        ])
             ->withToken($this->token())
-            ->{$method}(
-                $path,
-                [
-                    'json' => $parameters,
-                ]
-            );
+            ->{$method}($path,[
+                'json' => $parameters,
+            ]);
 
         return $response->json();
     }

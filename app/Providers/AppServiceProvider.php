@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Team;
-use Laravel\Cashier\Cashier;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {

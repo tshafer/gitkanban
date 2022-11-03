@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Contracts\SourceProviderClient;
-use App\Models\Deployment;
 use App\Models\Hook;
 use App\Models\SourceProvider;
 use Exception;
@@ -162,8 +161,6 @@ class GitHub implements SourceProviderClient
             "/repos/{$repository}/commits?sha={$branch}&per_page=1"
         )[0]['commit']['author'];
     }
-
-
 
     /**
      * @param  string  $repository

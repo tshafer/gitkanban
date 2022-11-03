@@ -2,17 +2,16 @@
 
 namespace App\Providers;
 
-use Spark\Plan;
-use Spark\Spark;
 use App\Models\Team;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
+use Spark\Plan;
+use Spark\Spark;
 
 class SparkServiceProvider extends ServiceProvider
 {
-        /**
+    /**
      * Register any application services.
      *
      * @return void
@@ -20,7 +19,6 @@ class SparkServiceProvider extends ServiceProvider
     public function register()
     {
         Spark::ignoreMigrations();
-
     }
 
     /**
@@ -30,8 +28,6 @@ class SparkServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
-
         Spark::billable(Team::class)->resolve(function (Request $request) {
             return $request->user()->currentTeam;
         });
