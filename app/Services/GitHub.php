@@ -58,8 +58,7 @@ class GitHub implements SourceProviderClient
                 'Accept' => 'application/vnd.github.v3+json',
             ]
         )
-            ->withToken($this->token())
-            ->{$method}(
+            ->withToken($this->token())->{$method}(
                 $path,
                 [
                     'json' => $parameters,
