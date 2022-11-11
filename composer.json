@@ -11,10 +11,13 @@
         "laravel/framework": "^9.19",
         "laravel/jetstream": "^2.12",
         "laravel/sanctum": "^3.0",
+        "laravel/socialite": "^5.5",
         "laravel/spark-stripe": "^2.0",
         "laravel/tinker": "^2.7",
         "livewire/livewire": "^2.10",
-        "lorisleiva/laravel-actions": "^2.4"
+        "lorisleiva/laravel-actions": "^2.4",
+        "wire-elements/pro": "^2.0",
+        "wireui/wireui": "^1.17"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -30,6 +33,10 @@
         {
             "type": "composer",
             "url": "https://spark.laravel.com"
+        },
+        {
+            "type": "composer",
+            "url": "https://wire-elements-pro.composer.sh"
         }
     ],
     "autoload": {

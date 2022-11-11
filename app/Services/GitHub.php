@@ -53,17 +53,12 @@ class GitHub implements SourceProviderClient
 
         $path = 'https://api.github.com/'.$path;
 
-        $response = HTTP::withHeaders(
+        $response = HTTP::withHeaders([
+            'Accept' => 'application/vnd.github.v3+json',
+        ])->withToken($this->token())->{$method}($path,
             [
-                'Accept' => 'application/vnd.github.v3+json',
-            ]
-        )
-            ->withToken($this->token())->{$method}(
-                $path,
-                [
-                    'json' => $parameters,
-                ]
-            );
+                'json' => $parameters,
+            ]);
 
         return $response->json();
     }

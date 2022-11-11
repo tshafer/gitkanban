@@ -53,7 +53,7 @@ class BitBucket implements SourceProviderClient
             'Accept' => 'application/vnd.github.v3+json',
         ])
             ->withToken($this->token())
-            ->{$method}($path,[
+            ->{$method}($path, [
                 'json' => $parameters,
             ]);
 

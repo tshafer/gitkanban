@@ -10,6 +10,7 @@ npm install
 npm run dev
 
 Resources
+
 https://laravel-livewire.com/docs/2.x
 https://laravelactions.com
 https://jetstream.laravel.com
