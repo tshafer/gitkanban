@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\UsedByTeams;
 use Facades\App\Source\SourceProviderClientFactory;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,32 +22,43 @@ class SourceProvider extends Model
         'meta',
         'token',
         'unique_id',
+        'expires_in',
+        'refresh_token',
+        'meta_updated_at',
     ];
 
     /**
      * {@inheritdoc}
      */
     protected $casts = [
-        'meta' => 'json',
+        'meta' => AsArrayObject::class,
+        'meta_updated_at' => 'datetime',
         // 'token' => 'encrypted',
         // 'unique_id' => 'encrypted',
     ];
 
-    /**
-     * Total repositories.
-     *
-     * @return Attribute
-     */
-    public function totalRepositories(): Attribute
+    public function lastRefreshedHuman(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->meta['total_private_repos'] + $this->meta['public_repos'] ?? 0,
+            get: fn () => $this->meta_updated_at?->diffForHumans() ?? 'N/A',
         );
     }
-    /**
-     * {@inheritdoc}
-     */
-    // protected $hidden = ['meta', 'created_at', 'updated_at', 'user_id', 'token', 'team_id'];
+
+    public function lastRefreshed(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->meta_updated_at?->format('m/d/y h:i') ?? 'N/A',
+        );
+    }
+
+    public function refresh(): void
+    {
+        $refreshData = $this->client()->refresh();
+
+        $this->meta_updated_at = now();
+        $this->meta['number_repos'] = $refreshData['number_repos'];
+        $this->save();
+    }
 
     /**
      * Get a source control provider client for the provider.

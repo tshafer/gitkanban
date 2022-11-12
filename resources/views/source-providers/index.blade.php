@@ -29,11 +29,27 @@
                             <tbody>
                                 @isset($providers[$source['type']])
                                     @forelse($providers[$source['type']] as $provider)
+                                    @if(!$provider->token)
+                                    <tr class="border-b">
+                                        <td class="p-4 " colspan="5">
+                                            <div class="mb-1 text-sm text-red-400">
+                                                Sorry, we can not connect to your {{ $provider->label }} account. Please reauthorize this account.<br/>
+                                                Make sure you're logged in to the correct GIT account.
 
+                                            </div>
+                                        </td>
+                                        <td class="max-w-sm gap-3 p-4 text-right">
+                                            <x-button sm primary :href="$source['url']">
+                                                {{ __('Reauthorize') }}
+                                            </x-button>
+                                        </td>
+                                    </tr>
+                                    @endif
                                         <tr @class([
                                             'border-t' => !$loop->first,
                                             'border-gray-200',
                                             'bg-gray-50' => $loop->even,
+                                            'bg-red-50'=> !$provider->token
                                         ])>
                                             <td class="p-4">
                                                 <div class="mb-1 text-gray-300">{{ __('Label') }}</div>
@@ -45,14 +61,22 @@
                                             </td>
                                             <td class="p-4">
                                                 <div class="mb-1 text-gray-300">{{ __('Repositories') }}</div>
-                                                <div class="text-gray-500 font-semi-bold">{{ $provider->total_repositories }}</div>
+                                                <div class="text-gray-500 font-semi-bold">{{ Arr::get($provider->meta, 'number_repos') ?? 'N/A' }}</div>
                                             </td>
                                             <td class="p-4 pl-0">
-                                                <div class="mb-1 text-gray-300">{{ __('Added on') }}</div>
-                                                <div class="text-gray-500 tooltip tooltip-info" data-tip="{{ $provider->created_at->diffForHumans() }}">{{ $provider->created_at->format('m-d-y') }}</div>
+                                                <div class="mb-1 text-gray-300">{{ __('Added') }}</div>
+                                                <div class="text-gray-500 tooltip tooltip-info" data-tip="{{ $provider->created_at->format('m-d-y') }}">{{ $provider->created_at->diffForHumans() }}</div>
+                                            </td>
+                                            <td class="p-4 pl-0">
+                                                <div class="mb-1 text-gray-300">{{ __('Last Refreshed') }}</div>
+                                                <div class="text-gray-500 tooltip tooltip-info" data-tip="{{ $provider->last_refreshed }}">{{ $provider->last_refreshed_human }}</div>
                                             </td>
 
                                             <td class="max-w-sm gap-3 p-4 text-right">
+
+                                                <x-button xs dark wire:click="refresh({{ $provider->id }})">
+                                                    {{ _('Refresh') }}
+                                                </x-button>
 
                                                 <x-button xs secondary wire:click="$emit('modal.open', 'source-providers.update', {'source_provider': {{ $provider->id }}})">
                                                     {{ _('Edit') }}

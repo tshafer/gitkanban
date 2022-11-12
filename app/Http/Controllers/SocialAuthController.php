@@ -37,7 +37,13 @@ class SocialAuthController extends Controller
             'github' => Socialite::driver($social)
                 ->setScopes(['user', 'admin:public_key', 'admin:repo_hook', 'read:user', 'public_repo', 'repo'])
                 ->redirect(),
-            default => Socialite::driver($provider)->redirect(),
+            'gitlab' => Socialite::driver($social)
+                ->setScopes(['api', 'read_api', 'read_user', 'read_repository', 'write_repository'])
+                ->redirect(),
+            'bitbucket' => Socialite::driver($social)
+                ->setScopes(['repository', 'repository:write', 'pullrequest', 'pullrequest:write', 'project', 'email'])
+                ->redirect(),
+            default => Socialite::driver($social)->redirect(),
         };
     }
 
@@ -58,45 +64,91 @@ class SocialAuthController extends Controller
             $source = $team->sourceProviders()->firstOrCreate([
                 'unique_id' => md5($social.$socialUser->id.$team->id.$socialUser->email.$socialUser->nickname),
             ]);
-            $source->update([
-                'type' => $social,
-                'label' => $socialUser->email,
-                'name' => $socialUser->nickname,
-                'token' => $socialUser->token,
-                'meta' => [
-                    'total_private_repos' => $socialUser->user['total_private_repos'],
-                    'owned_private_repos' => $socialUser->user['owned_private_repos'],
-                    'public_repos' => $socialUser->user['public_repos'],
-                    'url' => $socialUser->user['url'],
-                    'html_url' => $socialUser->user['html_url'],
-                    'refresh_token' => $socialUser->refreshToken,
-                    'expires_in' => $socialUser->expiresIn,
-                    'avatar' => $socialUser->avatar,
-                    'gravatar_id' => $socialUser->user['gravatar_id'],
-                ],
-            ]);
+            switch ($social) {
+                case 'github':
+                    $source->update(
+                        [
+                            'type' => $social,
+                            'label' => $socialUser->email,
+                            'name' => $socialUser->nickname,
+                            'token' => $socialUser->token,
+                            'refresh_token' => $socialUser->refreshToken,
+                            'expires_in' => $socialUser->expiresIn,
+                            'meta_updated_at' => now(),
+                            'meta' => [
+                                'number_repos' => $socialUser->user['total_private_repos'] + $socialUser->user['public_repos'],
+                                'url' => $socialUser->user['url'],
+                                'html_url' => $socialUser->user['html_url'],
+                                'avatar' => $socialUser->avatar,
+                                'gravatar_id' => $socialUser->user['gravatar_id'],
+                            ],
+                        ]
+                    );
+                    break;
+                case 'gitlab':
+                    $source->update([
+                        'type' => $social,
+                        'label' => $socialUser->email,
+                        'name' => $socialUser->nickname,
+                        'token' => $socialUser->token,
+                        'refresh_token' => $socialUser->refreshToken,
+                        'expires_in' => $socialUser->expiresIn,
+                        'meta_updated_at' => now(),
+                        'meta' => [
+                            // 'total_private_repos' => $socialUser->user['total_private_repos'],
+                            // 'owned_private_repos' => $socialUser->user['owned_private_repos'],
+                            // 'public_repos' => $socialUser->user['public_repos'],
+                            'url' => null,
+                            'html_url' => $socialUser->web_url,
 
-            return redirect()->route('source-providers')->with('success', __(ucfirst($social).' was connected successfully!'));
+                            'avatar' => $socialUser->avatar,
+                            'gravatar_id' => null,
+                        ],
+                    ]);
+                    $source->refresh();
+                    break;
+                case 'bitbucket':
+                    $source->update([
+                        'type' => $social,
+                        'label' => $socialUser->email,
+                        'name' => $socialUser->nickname,
+                        'token' => $socialUser->token,
+                        'refresh_token' => $socialUser->refreshToken,
+                        'expires_in' => $socialUser->expiresIn,
+                        'meta_updated_at' => now(),
+                        'meta' => [
+                            // 'total_private_repos' => $socialUser->user['total_private_repos'],
+                            // 'owned_private_repos' => $socialUser->user['owned_private_repos'],
+                            // 'public_repos' => $socialUser->user['public_repos'],
+                            'url' => null,
+                            'html_url' => $socialUser->web_url,
+                            'avatar' => $socialUser->avatar,
+                            'gravatar_id' => null,
+                        ],
+                    ]);
+                    $source->refresh();
+                    break;
+            }
+            if ($source->wasRecentlyCreated === true) {
+                $text = __(':name was added successfully!', ['name' => ucfirst(__($social))]);
+            } else {
+                $text = __(':name was updated successfully!', ['name' => ucfirst(__($social))]);
+            }
+
+            return redirect()->route('source-providers')->banner($text);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            // return redirect()->to('/settings/providers')->with(
-            //     'error',
-            //     'There was an error connecting your '.__($provider).' account. Please try again.'
-            // );
+            return redirect()->route('source-providers')->dangerBanner('There was an error connecting your '.ucfirst(__($social)).' account. Please try again.');
         }
     }
 
     /**
      * Get user from authentication provider.
      *
-     * @return SocialUser
+     * @return mixed
      */
     private function getUserFromSocial(string $social)
     {
         return match ($social) {
-            'bitbucket', 'gitlab' => Socialite::driver($social)
-                ->stateless()
-                ->user(),
             default => Socialite::driver($social)->user(),
         };
     }

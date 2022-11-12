@@ -22,7 +22,7 @@ return new class() extends Migration
             $table->string('label')->nullable();
             $table->string('unique_id')->nullable();
             $table->string('type', 25)->nullable();
-            $table->text('meta')->nullable();
+            $table->text('json')->nullable();
             $table->timestamps();
         });
     }

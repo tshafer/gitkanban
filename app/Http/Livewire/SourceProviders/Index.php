@@ -95,6 +95,13 @@ class Index extends Component
         ]);
     }
 
+    public function refresh(SourceProvider $source_provider): void
+    {
+        $source_provider->refresh();
+
+        $this->notification()->success(__('Source Provider data has been refreshed!'));
+    }
+
     /**
      * Destroy the Source Provider
      */
