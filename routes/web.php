@@ -24,4 +24,5 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('auth/{myprovider}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('auth.social.callback');
 
     Route::get('/source-providers', \App\Http\Livewire\SourceProviders\Index::class)->name('source-providers');
+    Route::get('/projects', \App\Http\Livewire\Projects\Index::class)->name('projects');
 });

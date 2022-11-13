@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Team;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +15,7 @@ return new class() extends Migration
     {
         Schema::create('source_providers', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Team::class);
+            $table->foreignId('team_id')->constrained()->cascadeOnDelete();
             $table->string('name')->nullable();
             $table->string('token')->nullable();
             $table->string('label')->nullable();

@@ -44,6 +44,14 @@ class Team extends JetstreamTeam
     }
 
     /**
+     * Get all the projects owned by the user.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    /**
      * The event map for the model.
      *
      * @var array

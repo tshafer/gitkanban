@@ -29,22 +29,22 @@
                             <tbody>
                                 @isset($providers[$source['type']])
                                     @forelse($providers[$source['type']] as $provider)
-                                    @if(!$provider->token)
-                                    <tr class="border-b">
-                                        <td class="p-4 " colspan="5">
-                                            <div class="mb-1 text-sm text-red-400">
-                                                Sorry, we can not connect to your {{ $provider->label }} account. Please reauthorize this account.<br/>
-                                                Make sure you're logged in to the correct GIT account.
+                                        @if(!$provider->token)
+                                            <tr class="border-b">
+                                                <td class="p-4 " colspan="5">
+                                                    <div class="mb-1 text-sm text-red-400">
+                                                        Sorry, we can not connect to your {{ $provider->label }} account. Please reauthorize this account.<br/>
+                                                        Make sure you're logged in to the correct GIT account.
 
-                                            </div>
-                                        </td>
-                                        <td class="max-w-sm gap-3 p-4 text-right">
-                                            <x-button sm primary :href="$source['url']">
-                                                {{ __('Reauthorize') }}
-                                            </x-button>
-                                        </td>
-                                    </tr>
-                                    @endif
+                                                    </div>
+                                                </td>
+                                                <td class="max-w-sm gap-3 p-4 text-right">
+                                                    <x-button sm primary :href="$source['url']">
+                                                        {{ __('Reauthorize') }}
+                                                    </x-button>
+                                                </td>
+                                            </tr>
+                                        @endif
                                         <tr @class([
                                             'border-t' => !$loop->first,
                                             'border-gray-200',

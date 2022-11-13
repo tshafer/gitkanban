@@ -17,6 +17,7 @@
         "livewire/livewire": "^2.10",
         "lorisleiva/laravel-actions": "^2.4",
         "spatie/laravel-ray": "^1.31",
+        "spatie/laravel-sluggable": "^3.4",
         "wire-elements/pro": "^2.0",
         "wireui/wireui": "^1.17"
     },
