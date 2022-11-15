@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Jetstream\Events\TeamCreated;
 use Laravel\Jetstream\Events\TeamDeleted;
 use Laravel\Jetstream\Events\TeamUpdated;
@@ -33,6 +34,22 @@ class Team extends JetstreamTeam
         'name',
         'personal_team',
     ];
+
+    /**
+     * Get all the source control providers owned by the user.
+     */
+    public function sourceProviders(): HasMany
+    {
+        return $this->hasMany(SourceProvider::class);
+    }
+
+    /**
+     * Get all the projects owned by the user.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
 
     /**
      * The event map for the model.

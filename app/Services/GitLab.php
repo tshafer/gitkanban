@@ -7,7 +7,6 @@ use App\Models\Deployment;
 use App\Models\Hook;
 use App\Models\SourceProvider;
 use Exception;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 
 class GitLab implements SourceProviderClient
@@ -49,30 +48,81 @@ class GitLab implements SourceProviderClient
     {
         $path = ltrim($path, '/');
 
-        $path = 'https://api.gitlab.com/'.$path;
+        $path = 'https://gitlab.com/api/v4/'.$path;
 
-        $response = HTTP::withHeaders(
-            [
-                'Accept' => 'application/vnd.github.v3+json',
-            ]
-        )
-            ->withToken($this->token())
-            ->{$method}(
-                $path,
-                [
-                    'json' => $parameters,
-                ]
-            );
+        return retry(5, function () use ($method, $path, $parameters) {
+            $response = HTTP::withHeaders([
+                'Accept' => 'application/vnd.gitlab.v4+json',
+            ])->withToken($this->token())->{$method}($path, ['json' => $parameters]);
 
-        return $response->json();
+            if ($response->failed()) {
+                $this->requestNewToken();
+            }
+
+            return $response->json();
+        }, 100);
+    }
+
+    public function requestNewToken()
+    {
+        $response = HTTP::withHeaders([
+            'Accept' => 'application/vnd.gitlab.v4+json',
+        ])->post('https://gitlab.com/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $this->source->refresh_token,
+            'client_id' => config('services.gitlab.client_id'),
+            'client_secret' => config('services.gitlab.client_secret'),
+            'redirect_uri' => config('services.gitlab.redirect'),
+        ]);
+
+        if ($response->failed()) {
+            $this->source->update([
+                'token' => null,
+                'refresh_token' => null,
+            ]);
+
+            throw new Exception($response->body());
+        }
+
+        $this->source->update([
+            'token' => $response->json()['access_token'],
+            'refresh_token' => $response->json()['refresh_token'],
+            'expires_in' => $response->json()['expires_in'],
+        ]);
     }
 
     /**
      * Get the authentication token for the provider.
      */
-    protected function token(): string
+    protected function token()
     {
-        return Arr::get($this->source->meta, 'token');
+        return $this->source->token;
+    }
+
+    /**
+     * Refresh token
+     *
+     * @return string
+     */
+    protected function refreshToken(): string
+    {
+        return $this->source->refresh_token;
+    }
+
+    public function projects()
+    {
+        return $this->request('get', 'projects');
+    }
+
+    public function refresh()
+    {
+        $projects = collect($this->projects());
+
+        // $user = $this->user();
+
+        return [
+            'number_repos' => $projects->count(),
+        ];
     }
 
     /**

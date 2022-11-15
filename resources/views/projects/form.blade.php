@@ -1,7 +1,7 @@
 <x-form-modal wire:submit.prevent="{{ Arr::get($properties, 'action') }}" :title="__(Arr::get($properties, 'title'))" :id="__(Arr::get($properties, 'id'))">
 
     <div class="mb-4">
-        <x-input :label="__('Label')" wire:model.defer="form.label"/>
+        <x-input :label="__('Name')" wire:model.defer="form.name"/>
     </div>
 
     <x-slot name="footer">

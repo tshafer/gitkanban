@@ -8,6 +8,7 @@ use App\Models\SourceProvider;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class BitBucket implements SourceProviderClient
 {
@@ -23,7 +24,7 @@ class BitBucket implements SourceProviderClient
      */
     public function name()
     {
-        return 'GitLab';
+        return 'Bitbucket';
     }
 
     /**
@@ -47,15 +48,15 @@ class BitBucket implements SourceProviderClient
     {
         $path = ltrim($path, '/');
 
-        $path = 'https://api.bitbucket.com/'.$path;
+        $path = 'https://api.bitbucket.com/2.0/'.$path;
 
         $response = HTTP::withHeaders([
-            'Accept' => 'application/vnd.github.v3+json',
-        ])
-            ->withToken($this->token())
-            ->{$method}($path,[
-                'json' => $parameters,
-            ]);
+            'Accept' => 'application/vnd.bitbucket.v2+json',
+        ])->withToken($this->token())->{$method}($path, ['json' => $parameters]);
+
+        if ($response->failed()) {
+            throw new Exception($response->body());
+        }
 
         return $response->json();
     }
@@ -65,12 +66,12 @@ class BitBucket implements SourceProviderClient
      */
     protected function token(): string
     {
-        return Arr::get($this->source->meta, 'token');
+        return $this->source->token;
     }
 
     public function pullPath(string $repository): string
     {
-        return 'https://github.com/'.$repository.'.git';
+        return 'https://bitbucket.com/'.$repository.'.git';
     }
 
     /**
@@ -122,6 +123,40 @@ class BitBucket implements SourceProviderClient
             'get',
             "/repos/{$repository}/commits?sha={$branch}&per_page=1"
         )[0]['sha'];
+    }
+
+    public function repositories(): array
+    {
+        return $this->aggregate('get', '/repositories', 'values');
+    }
+
+    public function refresh()
+    {
+        $repos = collect($this->repositories());
+
+        return [
+            'number_repos' => $repos->count(),
+        ];
+    }
+
+    /**
+     * Aggregate pages of results into a single result array.
+     *
+     * @param  string  $method
+     * @param  string  $path
+     * @param  string  $target
+     * @return array
+     */
+    protected function aggregate($method, $path, $target, array $parameters = [])
+    {
+        $results = [];
+        $response = $this->request($method, $path, $parameters);
+        $results = array_merge($results, $response[$target]);
+        do {
+            $response = $this->request($method, Str::replace('https://api.bitbucket.org/2.0/', '', $response['next']), $parameters);
+        } while (Arr::has($response, 'page'));
+
+        return $results;
     }
 
     public function commitInfo(string $repository, string $branch): mixed

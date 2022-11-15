@@ -6,7 +6,6 @@ use App\Contracts\SourceProviderClient;
 use App\Models\Hook;
 use App\Models\SourceProvider;
 use Exception;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 
 class GitHub implements SourceProviderClient
@@ -40,6 +39,11 @@ class GitHub implements SourceProviderClient
         }
     }
 
+    public function user(): array
+    {
+        return $this->request('get', '/user');
+    }
+
     /**
      * Make an HTTP request to GitHub.
      *
@@ -53,17 +57,13 @@ class GitHub implements SourceProviderClient
 
         $path = 'https://api.github.com/'.$path;
 
-        $response = HTTP::withHeaders(
-            [
-                'Accept' => 'application/vnd.github.v3+json',
-            ]
-        )
-            ->withToken($this->token())->{$method}(
-                $path,
-                [
-                    'json' => $parameters,
-                ]
-            );
+        $response = HTTP::withHeaders([
+            'Accept' => 'application/vnd.github.v3+json',
+        ])->withToken($this->token())->{$method}($path, ['json' => $parameters]);
+
+        if ($response->failed()) {
+            throw new Exception($response->body());
+        }
 
         return $response->json();
     }
@@ -75,7 +75,16 @@ class GitHub implements SourceProviderClient
      */
     protected function token()
     {
-        return Arr::get($this->source->meta, 'token');
+        return $this->source->token;
+    }
+
+    public function refresh()
+    {
+        $user = $this->user();
+
+        return [
+            'number_repos' => $user['total_private_repos'] + $user['public_repos'],
+        ];
     }
 
     /**

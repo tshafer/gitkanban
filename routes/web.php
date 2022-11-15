@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,16 +14,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => view('welcome'));
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+
+    Route::get('auth/{myprovider}/logout', [SocialAuthController::class, 'unlinkSocialProvider'])->name('auth.social.logout');
+    Route::get('auth/{myprovider}', [SocialAuthController::class, 'redirectToProvider'])->name('auth.social');
+    Route::get('auth/{myprovider}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('auth.social.callback');
+
+    Route::get('/source-providers', \App\Http\Livewire\SourceProviders\Index::class)->name('source-providers');
+    Route::get('/projects', \App\Http\Livewire\Projects\Index::class)->name('projects');
 });
